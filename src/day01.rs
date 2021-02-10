@@ -39,7 +39,7 @@ pub fn part2(input: &str) -> Result<String, Box<dyn Error>> {
 
 // attempts to find three items in the set which sum to a target number
 fn find_three_that_sum(entries: &HashSet<i32>, target: i32) -> Option<(i32, i32, i32)> {
-    for entry in entries.iter() {
+    for entry in entries {
         let target = target - entry;
 
         if let Some((lhs,rhs)) = find_two_that_sum(&entries, target) {
