@@ -1,9 +1,9 @@
 use std::env;
 use std::fs;
 use std::io;
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
-use advent_of_code_2020::{get_day, noop};
+use advent_of_code_2020::{get_day, DayFn};
 
 fn fmt_time(ms: f64) -> String {
     if ms <= 1.0 {
@@ -42,6 +42,7 @@ fn main() {
             .read_line(&mut day)
             .expect("Failed to read line");
     }
+
     // Parse day as number
     day = day.trim().to_string();
     let day_num: u32 = match day.parse() {
@@ -49,34 +50,34 @@ fn main() {
         Err(_) => {
             println!("Invalid day number: {}", day);
             return;
-        },
+        }
     };
+
     // Read input file
     let cwd = env::current_dir().unwrap();
-    let filename = cwd
-        .join("inputs")
-        .join(format!("day{:02}.txt", day_num));
+    let filename = cwd.join("inputs").join(format!("day{:02}.txt", day_num));
     println!("Reading {}", filename.display());
-    let input = fs::read_to_string(filename)
-        .expect("Error while reading");
+    let input = fs::read_to_string(filename).expect("Error while reading");
 
     // Get corresponding function
-
     let to_run = get_day(day_num);
-    // Time it
-    if to_run.0 != noop {
-        println!("Running Part 1");
-        let part1_start = Instant::now();
-        to_run.0(input.clone());
-        let part1_dur = part1_start.elapsed();
-        println!("Took {}", fmt_dur(part1_dur));
-    }
 
-    if to_run.1 != noop {
-        println!("Running Part 2");
-        let part2_start = Instant::now();
-        to_run.1(input.clone());
-        let part2_dur = part2_start.elapsed();
-        println!("Took {}", fmt_dur(part2_dur));
-    }
+    // Time it
+    run_day_fn(to_run.0, &input, 1);
+    run_day_fn(to_run.1, &input, 2);
+}
+
+fn run_day_fn(day_fn: DayFn, input: &str, part: i32) {
+    println!("Running part {}", part);
+
+    let part2_start = Instant::now();
+
+    match day_fn(input) {
+        Err(e) => eprintln!("error running part: {}. error message: {}",  part, e),
+        Ok(m) => println!("{}", m)
+    };
+
+    let part2_dur = part2_start.elapsed();
+
+    println!("Took {}", fmt_dur(part2_dur));
 }

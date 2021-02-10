@@ -3,13 +3,15 @@ use std::error::Error;
 
 const TARGET_SUM: i32 = 2020;
 
-pub fn part1(input: String) -> Result<String, Box<dyn Error>> {
-    let parsed = parse_entries(&input)?;
+pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
+    let entries = &parse_entries(&input)?;
 
-    match find_two_that_sum(&parsed, TARGET_SUM) {
-        None => Err(format!("Could not find two entries that sum to {}", TARGET_SUM)),
-        Some((lhs, rhs)) => Ok(format!("{} * {} = {}", lhs, rhs, lhs*rhs))
-    }
+    let message = match find_two_that_sum(&entries, TARGET_SUM) {
+        None => format!("Could not find two entries that sum to {}", TARGET_SUM),
+        Some((lhs, rhs)) => format!("{} * {} = {}", lhs, rhs, lhs*rhs)
+    };
+
+    Ok(message)
 }
 
 // attempts to find two items in the set which sum to a target number
@@ -24,13 +26,16 @@ fn find_two_that_sum(entries: &HashSet<i32>, target: i32) -> Option<(i32,i32)> {
     None
 }
 
-pub fn part2(input: String) {
-    match find_three_that_sum(&parse_entries(&input), TARGET_SUM) {
-        None => println!("Could not find three entries that sum to {}", TARGET_SUM),
-        Some((a,b,c)) => println!("{} * {} * {} = {}", a, b, c, a*b*c)
-    };
-}
+pub fn part2(input: &str) -> Result<String, Box<dyn Error>> {
+    let entries = &parse_entries(&input)?;
 
+    let message = match find_three_that_sum(&entries, TARGET_SUM) {
+        None => format!("Could not find three entries that sum to {}", TARGET_SUM),
+        Some((a,b,c)) => format!("{} * {} * {} = {}", a, b, c, a*b*c)
+    };
+
+    Ok(message)
+}
 
 // attempts to find three items in the set which sum to a target number
 fn find_three_that_sum(entries: &HashSet<i32>, target: i32) -> Option<(i32, i32, i32)> {
