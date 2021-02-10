@@ -4,7 +4,7 @@ use std::error::Error;
 const TARGET_SUM: i32 = 2020;
 
 pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
-    let entries = &parse_entries(&input)?;
+    let entries = parse_entries(&input)?;
 
     let message = match find_two_that_sum(&entries, TARGET_SUM) {
         None => format!("Could not find two entries that sum to {}", TARGET_SUM),
@@ -27,7 +27,7 @@ fn find_two_that_sum(entries: &HashSet<i32>, target: i32) -> Option<(i32,i32)> {
 }
 
 pub fn part2(input: &str) -> Result<String, Box<dyn Error>> {
-    let entries = &parse_entries(&input)?;
+    let entries = parse_entries(&input)?;
 
     let message = match find_three_that_sum(&entries, TARGET_SUM) {
         None => format!("Could not find three entries that sum to {}", TARGET_SUM),
