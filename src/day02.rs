@@ -110,5 +110,28 @@ fn part1_validator(password: &str, rule: &Rule) -> bool {
 }
 
 fn part2_validator(password: &str, rule: &Rule) -> bool {
-    false   
+    let mut match_1 = false;
+    let mut match_2 = false;
+
+    for (index, character) in password.chars().enumerate() {
+        let password_index = (index as u32) + 1;
+
+        if rule.min == password_index {
+            if character == rule.letter {
+                match_1 = true;
+            } 
+        }
+        
+        if rule.max == password_index {
+            if character == rule.letter {
+                match_2 = true;
+            }
+        }
+    }
+
+    // if match_1 != match_2 {
+    //     println!("{} {:?}", password, rule);
+    // }
+    
+    match_1 != match_2
 }
