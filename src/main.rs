@@ -64,6 +64,7 @@ fn main() {
 
     // Time it
     run_day_fn(to_run.0, &input, 1);
+    println!();
     run_day_fn(to_run.1, &input, 2);
 }
 
