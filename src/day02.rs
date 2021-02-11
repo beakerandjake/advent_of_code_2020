@@ -1,10 +1,16 @@
 use std::error::Error;
 
+const MIN_MAX_SEPARATOR: char = '-';
+const RULE_AND_PASSWORD_SEPARATOR: char = ':';
+
+// represents a fn which tests a rule against a password. +
+type RuleValidatorFn = fn(&str, &Rule) -> bool;
+ 
 // rule struct contains all the information about a password rule.
 #[derive(Debug)]
 struct Rule {
-    min: i32,
-    max: i32,
+    min: u32,
+    max: u32,
     letter: char,
 }
 
@@ -30,46 +36,41 @@ impl Rule {
     }
 
     // parses a min/max string in the format 'X-Y' and returns the parsed min/max values.
-    fn parse_min_max(input: &str) -> Result<(i32,i32), Box<dyn Error>> {
-        let mut parts = input.split('-');
+    fn parse_min_max(input: &str) -> Result<(u32,u32), Box<dyn Error>> {
+        let mut parts = input.split(MIN_MAX_SEPARATOR);
 
         // expect min as first number.
-        let min: i32 = parts
+        let min: u32 = parts
             .next()
             .ok_or("min is missing")?
             .parse()
-            .or(Err("min was not numeric"))?;
+            .or(Err("couldn't parse min"))?;
 
         // expect max as second number
-        let max: i32 = parts
+        let max: u32 = parts
             .next()
             .ok_or("max is missing")?
             .parse()
-            .or(Err("max was not numeric"))?;
+            .or(Err("couldn't parse max"))?;
 
         Ok((min,max))
     }
 }
 
 pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
+    let valid_password_count = validate_passwords(input,  part1_validator)?;
+    Ok(format!("Valid Passwords: {}", valid_password_count))
+}
 
-    let mut valid_password_count = 0;
-
-    for line in input.lines() {
-        let (rule, password) = parse_rule_and_password(&line)?;
-
-        if validate_password(&password, &rule) {
-            valid_password_count += 1;
-        }
-    }
-
+pub fn part2(input: &str) -> Result<String, Box<dyn Error>> {
+    let valid_password_count = validate_passwords(input, part2_validator)?;
     Ok(format!("Valid Passwords: {}", valid_password_count))
 }
 
 // parse an input string in the format 'X-Y Z: P'
 // were 'X-Y Z' is the rule string and 'P' is the password. 
 fn parse_rule_and_password(input: &str) -> Result<(Rule, &str), Box<dyn Error>> {
-    let mut parts = input.split(':');
+    let mut parts = input.split(RULE_AND_PASSWORD_SEPARATOR);
 
     let rule_str = parts
         .next()
@@ -82,6 +83,32 @@ fn parse_rule_and_password(input: &str) -> Result<(Rule, &str), Box<dyn Error>> 
     Ok((Rule::new(&rule_str)?, password)) 
 }
 
-fn validate_password(password: &str, rule: &Rule) -> bool {
-    false
+// iterate every line of input, parsing a rule and a password, then validating the password
+// with the validator fn.
+fn validate_passwords(input: &str, validation_fn: RuleValidatorFn) -> Result<u32, Box<dyn Error>> {
+    let mut valid_password_count = 0;
+
+    for line in input.lines() {
+        let (rule, password) = parse_rule_and_password(&line)?;
+
+        if validation_fn(&password, &rule) {
+            valid_password_count += 1;
+        }
+    }
+
+    Ok(valid_password_count)
+}
+
+// returns true if the password satisfied the rule
+fn part1_validator(password: &str, rule: &Rule) -> bool {
+    let char_count = password
+        .chars()
+        .filter(|c| *c == rule.letter)
+        .count() as u32;
+
+    char_count >= rule.min && char_count <= rule.max
+}
+
+fn part2_validator(password: &str, rule: &Rule) -> bool {
+    false   
 }
