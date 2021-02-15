@@ -62,37 +62,37 @@ impl Map {
         }
     }
 
-    fn is_tree(&self, point: Point) -> bool {
-        self.tree_coordinates.contains(&point)
+    fn sled_to_bottom(&self, starting_point: Point, slope: Point) -> u32 {
+        let mut current_position = starting_point;
+        let mut tree_count = 0;
+
+        while current_position.y < self.pattern_max_y {
+            current_position = current_position + slope;
+
+            if self.is_tree(current_position) {
+                tree_count += 1;
+            }
+        }
+
+        tree_count
     }
 
-    fn reached_bottom(&self, point: Point) -> bool {
-        point.y >= self.pattern_max_y
+    fn is_tree(&self, point: Point) -> bool {
+        let translated_point = Point {
+            x: point.x % (self.pattern_max_x + 1),
+            y: point.y,
+        };
+
+        self.tree_coordinates.contains(&translated_point)
     }
 }
 
 pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
     let map = Map::new(&input);
     let slope = Point { x: 3, y: 1 };
-    let mut tobaggan_position = Point { x: 0, y: 0 };
+    let tobaggan_position = Point { x: 0, y: 0 };
     
-    let mut tree_count = 0;
-    
-    while map.reached_bottom(tobaggan_position) == false {
-        tobaggan_position = tobaggan_position + slope;
+    let tree_count = map.sled_to_bottom(tobaggan_position, slope);
 
-        if tree_count < 2 {
-            println!("sledded to: {:?}", tobaggan_position);
-        }
-
-        if map.is_tree(tobaggan_position) {
-            tree_count += 1;
-            println!("hit tree at: {:?}", tobaggan_position);
-        }
-    }
-
-    println!("reached the bottom: {:?}", tobaggan_position);
-    // println!("max_x = {}, max_y = {}, tree_coordinates: {:?}", max_x, max_y, tree_coordinates);
-
-    Ok("Great!".to_string())
+    Ok(format!("hit: {} trees.",tree_count))
 }
