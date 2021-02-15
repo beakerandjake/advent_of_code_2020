@@ -10,6 +10,12 @@ struct Point {
     y: u32,
 }
 
+impl Point {
+    fn new(x:u32, y:u32) -> Point {
+        Point{x,y}
+    }
+}
+
 impl Add for Point {
     type Output = Self;
 
@@ -39,10 +45,7 @@ impl Map {
                 // only care about map coordinates which are for trees.
                 // there isn't a point of storing anything if there is no terrain there.
                 if character == TREE_INPUT_CHAR {
-                    tree_coordinates.insert(Point {
-                        x: char_index as u32,
-                        y: max_y,
-                    });
+                    tree_coordinates.insert(Point::new(char_index as u32, max_y));
                 }
             }
 
@@ -89,10 +92,28 @@ impl Map {
 
 pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
     let map = Map::new(&input);
-    let slope = Point { x: 3, y: 1 };
-    let tobaggan_position = Point { x: 0, y: 0 };
+    let slope = Point::new(3,1);
+    let tobaggan_position = Point::new(0,0);
     
     let tree_count = map.sled_to_bottom(tobaggan_position, slope);
 
-    Ok(format!("hit: {} trees.",tree_count))
+    Ok(tree_count.to_string())
+}
+
+pub fn part2(input: &str) -> Result<String, Box<dyn Error>> {
+    let terrain_map = Map::new(&input);
+    let starting_point = Point::new(0,0);
+    let slopes = vec![
+        Point::new(1,1),
+        Point::new(3,1),
+        Point::new(5,1),
+        Point::new(7,1),
+        Point::new(1,2)
+    ];
+
+    let result = slopes
+        .iter()
+        .fold(1, |acc, x| acc * terrain_map.sled_to_bottom(starting_point, *x));
+     
+    Ok(result.to_string())
 }
