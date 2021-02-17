@@ -13,22 +13,13 @@ pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
     required_keys.insert("ecl");
     required_keys.insert("pid");
 
-    let mut valid_passport_count = 0;
-
-    for passport in parse_passports(input) {   
-
-        let mut required_key_count = 0; 
-
-        for (key, _) in passport {
-            if required_keys.contains(key) {
-                required_key_count += 1;
-            }
-        }
-        
-        if required_key_count >= required_keys.len() {
-            valid_passport_count += 1;
-        }
-    }
+    let valid_passport_count = parse_passports(input)
+        .filter(|passport| passport
+            .keys()
+            .filter(|key| required_keys.contains(*key))
+            .count() >= required_keys.len()
+        )
+        .count();
 
     Ok(valid_passport_count.to_string())
 }
