@@ -1,8 +1,7 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
 
-const NEW_LINE: &str = "\r\n";
-const ENTRY_SEPARATOR: &str = "\r\n\r\n";
 
 pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
     let mut required_keys = HashSet::new();
@@ -16,27 +15,36 @@ pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
 
     let mut valid_passport_count = 0;
 
-    for entry in input.split(ENTRY_SEPARATOR) {
-        let sanitized = entry.replace(NEW_LINE, " ");
-        let key_value_pairs: Vec<&str> = sanitized.split(" ").collect();
-        
-        // passport can only be valid if it has at least the min number of fields.
-        if key_value_pairs.len() < 7 {
-            continue;
+    for passport in parse_passports(input) {   
+
+        let mut required_key_count = 0; 
+
+        for (key, _) in passport {
+            if required_keys.contains(key) {
+                required_key_count += 1;
+            }
         }
-
-        // get the total number of keys in the passport which were required.
-        let number_of_required_fields = key_value_pairs
-            .iter()
-            .filter_map(|kvp| kvp.split(':').next())
-            .collect::<HashSet<&str>>()
-            .intersection(&required_keys)
-            .count();
-
-        if number_of_required_fields >= required_keys.len() {
+        
+        if required_key_count >= required_keys.len() {
             valid_passport_count += 1;
         }
     }
 
     Ok(valid_passport_count.to_string())
+}
+
+// returns an iterator which iterates each passport entry of the input
+// and returns a HashMap of Key/Values contained in the passport.
+fn parse_passports<'a>(input: &'a str) ->  Box<dyn Iterator<Item = HashMap<&'a str, &'a str>> + 'a> {
+    Box::new(input.split("\r\n\r\n").map(|entry| {
+        entry
+            .split(|c| c == ' ' || c == '\r' || c == '\n')
+            .filter_map(|kvp| {
+                let mut result = kvp.split(':');
+                let key = result.next();
+                let value = result.next();
+                key.zip(value)
+            })
+            .collect()
+    }))
 }
