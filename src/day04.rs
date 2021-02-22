@@ -4,14 +4,9 @@ use std::collections::HashSet;
 use std::error::Error;
 
 pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
-    let mut required_keys = HashSet::new();
-    required_keys.insert("byr");
-    required_keys.insert("iyr");
-    required_keys.insert("eyr");
-    required_keys.insert("hgt");
-    required_keys.insert("hcl");
-    required_keys.insert("ecl");
-    required_keys.insert("pid");
+    let required_keys: HashSet<&str> = vec!["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
+        .into_iter()
+        .collect();
 
     let valid_passport_count = parse_passports(input)
         .filter(|passport| {
@@ -45,6 +40,7 @@ pub fn part2(input: &str) -> Result<String, Box<dyn Error>> {
     validators.insert("hgt", Box::new(|x| validate_height(x, &hgt_regex)));
 
     let valid_passport_count = parse_passports(input)
+        // we only want passports which pass every validator.
         .filter(|passport| {
             validators
                 .iter()
