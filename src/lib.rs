@@ -1,26 +1,80 @@
+use std::env;
 use std::error::Error;
+use std::fs;
+use std::time::Instant;
 
-// Days
-pub mod day01;
-pub mod day02;
-pub mod day03;
-pub mod day04;
-pub mod day05;
-
-pub fn noop(_inp: &str) -> Result<String, Box<dyn Error>> { Ok(String::from("not implemented")) }
+mod day01;
+mod day02;
+mod day03;
+mod day04;
+mod day05;
 
 pub type DayFn = fn(&str) -> Result<String, Box<dyn Error>>;
 
-pub fn get_day(day: u32) -> (DayFn, DayFn) {
-    return match day {
-        1 => (day01::part1, day01::part2),
-        2 => (day02::part1, day02::part2),
-        3 => (day03::part1, day03::part2),
-        4 => (day04::part1, day04::part2),
-        5 => (day05::part1, day05::part2),
-        _ => {
-            println!("Unknown day: {}", day);
-            return (noop, noop);
-        },
-    };
+pub struct Config {
+    pub day: u32,
+}
+
+impl Config {
+    pub fn new(mut args: env::Args) -> Result<Config, Box<dyn Error>> {
+        // consume first arg (name of the program)
+        args.next();
+
+        // expect next arg is the day number
+        let day: u32 = args
+            .next()
+            .ok_or("day is missing")?
+            .parse()
+            .or(Err("day was not numeric"))?;
+
+        Ok(Config { day })
+    }
+}
+
+pub fn run_day(day: u32) -> Result<(), Box<dyn Error>> {
+    // load text file input for day.
+    let input = read_input_file(day)?;
+    // load the actual fn's that will be executed.
+    let day_fns = get_day(day).ok_or("day not implemented")?;
+    
+    // run part 1
+    println!("running part 1");
+    time_and_run(day_fns.0, &input)?;
+
+    // run part 2
+    println!("\nrunning part 2");
+    time_and_run(day_fns.1, &input)
+}
+
+// load the txt input file for the day and returns the contents.
+fn read_input_file(day: u32) -> Result<String, Box<dyn Error>> {
+    let file_name = env::current_dir()?
+        .join("inputs")
+        .join(format!("day{:02}.txt", day));
+
+    fs::read_to_string(file_name).map_err(|e| e.into())
+}
+
+// returns the part 1 / 2 functions to execute for the day
+fn get_day(day: u32) -> Option<(DayFn, DayFn)> {
+    match day {
+        1 => Some((day01::part1, day01::part2)),
+        2 => Some((day02::part1, day02::part2)),
+        3 => Some((day03::part1, day03::part2)),
+        4 => Some((day04::part1, day04::part2)),
+        5 => Some((day05::part1, day05::part2)),
+        _ => None,
+    }
+}
+
+// run the day fn and measure the amount of time it takes
+fn time_and_run(day_fn: DayFn, input: &str) -> Result<(), Box<dyn Error>> {
+    let start = Instant::now();
+
+    day_fn(input).and_then(|message| {
+        println!("{}", message);
+        let elapsed = start.elapsed();
+        println!("took: {:?}", elapsed);
+        Ok(())
+    })
 }
