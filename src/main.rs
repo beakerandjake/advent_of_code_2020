@@ -1,7 +1,7 @@
 use std::env;
 use std::process;
 
-use advent_of_code_2020::{run_day, Config};
+use advent_of_code_2020::{run_day, config::Config};
 
 fn main() {
     let config = Config::new(env::args()).unwrap_or_else(|err| {

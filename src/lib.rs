@@ -3,40 +3,22 @@ use std::error::Error;
 use std::fs;
 use std::time::Instant;
 
+pub mod config;
 mod day01;
 mod day02;
 mod day03;
 mod day04;
 mod day05;
 
-pub type DayFn = fn(&str) -> Result<String, Box<dyn Error>>;
+type DayFn = fn(&str) -> Result<String, Box<dyn Error>>;
 
-pub struct Config {
-    pub day: u32,
-}
-
-impl Config {
-    pub fn new(mut args: env::Args) -> Result<Config, Box<dyn Error>> {
-        // consume first arg (name of the program)
-        args.next();
-
-        // expect next arg is the day number
-        let day: u32 = args
-            .next()
-            .ok_or("day is missing")?
-            .parse()
-            .or(Err("day was not numeric"))?;
-
-        Ok(Config { day })
-    }
-}
-
+// attempts to run both parts of the day 
 pub fn run_day(day: u32) -> Result<(), Box<dyn Error>> {
     // load text file input for day.
     let input = read_input_file(day)?;
     // load the actual fn's that will be executed.
     let day_fns = get_day(day).ok_or("day not implemented")?;
-    
+
     // run part 1
     println!("running part 1");
     time_and_run(day_fns.0, &input)?;
