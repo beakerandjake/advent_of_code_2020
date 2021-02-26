@@ -9,6 +9,7 @@ mod day02;
 mod day03;
 mod day04;
 mod day05;
+mod day06;
 
 type DayFn = fn(&str) -> Result<String, Box<dyn Error>>;
 
@@ -45,6 +46,7 @@ fn get_day(day: u32) -> Option<(DayFn, DayFn)> {
         3 => Some((day03::part1, day03::part2)),
         4 => Some((day04::part1, day04::part2)),
         5 => Some((day05::part1, day05::part2)),
+        6 => Some((day06::part1, day06::part2)),
         _ => None,
     }
 }
