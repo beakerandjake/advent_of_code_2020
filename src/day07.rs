@@ -1,40 +1,75 @@
 use std::collections::HashMap;
 use std::error::Error;
 
-type BagName<'a> = (&'a str, &'a str);
-type ChildBag<'a> = (u32, BagName<'a>);
-type BagMap<'a> = HashMap<BagName<'a>, Bag<'a>>;
+type BagMap<'a> = HashMap<&'a str, Bag<'a>>;
+type ChildBag<'a> = (u32, &'a str);
 
-#[derive(Eq, Hash)]
+#[derive(Debug)]
 struct Bag<'a> {
-    words: Vec<&'a str>,
+    input: &'a str,
+    word_breaks: Vec<usize>,
+    name: &'a str,
 }
 
 impl<'a> Bag<'a> {
     fn new(input: &'a str) -> Bag {
+        // in order to parse the input string we just need to collect the word breaks so
+        // we can jump from word to word.
+        let mut word_breaks = Vec::new();
+
+        for (index, character) in input.chars().enumerate() {
+            if character.is_whitespace() {
+                word_breaks.push(index);
+            }
+        }
+
+        // expect name is first two words.
+        let name = &input[..word_breaks[1]];
+
         Bag {
-            words: input.split_whitespace().collect(),
+            input,
+            word_breaks,
+            name,
         }
     }
 
-    fn name(&self) -> BagName<'a> {
-        (self.words[0], self.words[1])
-    }
-
+    // returns an iterator that iterates over all of the child bags
     fn children(&self) -> BagIter {
         BagIter {
             bag: self,
             child_index: 0,
         }
     }
-}
 
-impl<'a> PartialEq for Bag<'a> {
-    fn eq(&self, other: &Self) -> bool {
-        self.words[0] == other.words[0] && self.words[1] == other.words[1]
+    fn get_child(&self, child_index: usize) -> Option<ChildBag<'a>> {
+        // children start at break 4 and repeat every 4 breaks
+        let word_break_index = child_index * 4 + 4;
+
+        // bail if requested child doesn't exist.
+        if word_break_index >= self.word_breaks.len() {
+            return None;
+        }
+        // expect count is first word of child.
+        let count_str = &self.input
+            [self.word_breaks[word_break_index - 1] + 1..self.word_breaks[word_break_index]];
+
+        // bail if no children.
+        if count_str == "no" {
+            return None;
+        }
+
+        // expect count is a number.
+        let parsed_count: u32 = count_str.parse().unwrap();
+
+        // expect next two words after count are the child name.
+        let name = &self.input
+            [self.word_breaks[word_break_index] + 1..self.word_breaks[word_break_index + 2]];
+
+        Some((parsed_count, name))
     }
 }
 
+// lets us iterate over the children without pre-parsing
 pub struct BagIter<'a> {
     bag: &'a Bag<'a>,
     child_index: usize,
@@ -43,24 +78,9 @@ pub struct BagIter<'a> {
 impl<'a> Iterator for BagIter<'a> {
     type Item = ChildBag<'a>;
     fn next(&mut self) -> Option<ChildBag<'a>> {
-        let index = self.child_index * 4 + 4;
-
-        if index >= self.bag.words.len() {
-            return None;
-        }
-
-        let count = self.bag.words[index];
-
-        if count == "no" {
-            return None;
-        }
-
-        let parsed_count: u32 = count.parse().unwrap();
-        let name = (self.bag.words[index + 1], self.bag.words[index + 2]);
-
+        let next = self.bag.get_child(self.child_index);
         self.child_index += 1;
-
-        Some((parsed_count, name))
+        next
     }
 }
 
@@ -69,50 +89,39 @@ pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
         .lines()
         .map(|line| {
             let bag = Bag::new(line);
-            (bag.name(), bag)
+            (bag.name, bag)
         })
         .collect();
 
-    let target_bag = ("shiny", "gold");
-    let mut found_count = 0;
-    let mut visited: HashMap<BagName, bool> = HashMap::new();
+    let mut visited = HashMap::new();
+    visited.insert("shiny gold", true);
 
-    for bag in &bags {
-        if *bag.0 == target_bag {
-            continue;
-        }
+    let count = bags
+        .keys()
+        .filter(|bag| search_part1(bag, &bags, &mut visited))
+        .count()
+        - 1;
 
-        if search_part1(bag.1, target_bag, &bags, &mut visited) {
-            visited.insert(*bag.0, true);
-            found_count += 1;
-        }
-    }
-
-    Ok(found_count.to_string())
+    Ok(count.to_string())
 }
 
 fn search_part1<'a>(
-    current_bag: &'a Bag<'a>,
-    target_bag_name: BagName<'a>,
-    all_bags: &'a BagMap<'a>,
-    visited: &mut HashMap<BagName<'a>, bool>,
+    current_bag: &'a str,
+    all_bags: &'a HashMap<&'a str, Bag<'a>>,
+    visited: &mut HashMap<&'a str, bool>,
 ) -> bool {
-    let current_bag_name = current_bag.name();
+    match visited.get(current_bag) {
+        Some(&v) => return v,
+        None => {
+            let found = all_bags[current_bag]
+                .children()
+                .any(|(_, name)| search_part1(name, all_bags, visited));
 
-    if let Some(&v) = visited.get(&current_bag_name) {
-        return v;
+            visited.insert(current_bag, found);
+
+            return found;
+        }
     }
-
-    if current_bag_name == target_bag_name {
-        return true;
-    }
-
-    current_bag.children().any(|x| {
-        let child_bag = all_bags.get(&x.1).unwrap();
-        let found = search_part1(child_bag, target_bag_name, &all_bags, visited);
-        visited.insert(x.1, found);
-        found
-    })
 }
 
 pub fn part2(_input: &str) -> Result<String, Box<dyn Error>> {
