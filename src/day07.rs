@@ -124,6 +124,25 @@ fn search_part1<'a>(
     }
 }
 
-pub fn part2(_input: &str) -> Result<String, Box<dyn Error>> {
-    unimplemented!();
+pub fn part2(input: &str) -> Result<String, Box<dyn Error>> {
+    let bags: BagMap = input
+        .lines()
+        .map(|line| {
+            let bag = Bag::new(line);
+            (bag.name, bag)
+        })
+        .collect();
+
+    let count = part2_search("shiny gold", &bags) - 1;
+
+    Ok(count.to_string())
+}
+
+fn part2_search<'a>(current_bag: &'a str, all_bags: &'a HashMap<&'a str, Bag<'a>>) -> u32 {
+    // add 1 to ensure that the current bag is counted.
+    all_bags[current_bag]
+        .children()
+        .map(|(count, name)| count * part2_search(name, all_bags))
+        .sum::<u32>()
+        + 1
 }
