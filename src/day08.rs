@@ -1,6 +1,6 @@
 use std::error::Error;
 
-type InstructionResult = (i32, usize);
+type InstructionResult = (i32, i32);
 
 pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
     let instructions: Vec<&str> = input.lines().collect();
@@ -14,11 +14,13 @@ pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
             None => return Err("could not parse instruction".into()),
             Some(result) => {
                 accumulator += result.0;
-                instruction_index += result.1;
+                instruction_index = match result.1.is_positive() {
+                    true => instruction_index + result.1 as usize,
+                    false => instruction_index - result.1.abs() as usize,
+                };
             }
         }
     }
-
     Ok(accumulator.to_string())
 }
 
@@ -32,7 +34,7 @@ fn run_instruction(instruction: &str) -> Option<InstructionResult> {
 }
 
 fn jmp(argument: &str) -> Option<InstructionResult> {
-    parse_signed_num(argument).and_then(|p| Some((0, p as usize)))
+    parse_signed_num(argument).and_then(|p| Some((0, p)))
 }
 
 fn acc(argument: &str) -> Option<InstructionResult> {
@@ -40,7 +42,7 @@ fn acc(argument: &str) -> Option<InstructionResult> {
 }
 
 fn parse_signed_num(input: &str) -> Option<i32> {
-    input.chars().nth(1).and_then(|sign| match sign {
+    input.chars().next().and_then(|sign| match sign {
         '+' => input[1..].parse().ok(),
         '-' => input.parse().ok(),
         _ => None,
