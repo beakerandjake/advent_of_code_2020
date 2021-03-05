@@ -25,59 +25,29 @@ pub fn part1(input: &str) -> Result<String, Box<dyn Error>> {
     Ok(accumulator.to_string())
 }
 
-fn run_instruction(instruction: &str, argument: &str) -> Option<InstructionResult> {
-    match instruction {
-        "jmp" => jmp(argument),
-        "acc" => acc(argument),
-        "nop" => Some((0, 1)),
-        _ => None,
-    }
-}
-
-fn jmp(argument: &str) -> Option<InstructionResult> {
-    parse_signed_num(argument).and_then(|p| Some((0, p)))
-}
-
-fn acc(argument: &str) -> Option<InstructionResult> {
-    parse_signed_num(argument).and_then(|p| Some((p, 1)))
-}
-
-fn parse_signed_num(input: &str) -> Option<i32> {
-    input.chars().next().and_then(|sign| match sign {
-        '+' => input[1..].parse().ok(),
-        '-' => input.parse().ok(),
-        _ => None,
-    })
-}
-
 pub fn part2(input: &str) -> Result<String, Box<dyn Error>> {
     let instructions: Vec<&str> = input.lines().collect();
 
     for (index, instruction) in instructions.iter().enumerate() {
-        let name = &instruction[..3];
         let argument = &instruction[4..];
-        match name {
-            "jmp" | "nop" => match test_replacement_instruction(
-                replace_instruction(name),
-                argument,
-                index,
-                &instructions,
-            ) {
-                Some(acc) => return Ok(acc.to_string()),
-                None => continue,
-            },
-            _ => continue,
+        let name = match replace_instruction(&instruction[..3]) {
+            None => continue,
+            Some(x) => x,
         };
+
+        if let Some(acc) = test_replacement_instruction(name, argument, index, &instructions) {
+            return Ok(acc.to_string());
+        }
     }
 
-    Ok("great_job".to_string())
+    Err("could not find instruction".into())
 }
 
-fn replace_instruction<'a>(instruction: &'a str) -> &'a str {
+fn replace_instruction<'a>(instruction: &'a str) -> Option<&'a str> {
     match instruction {
-        "nop" => "jmp",
-        "jmp" => "nop",
-        x => x,
+        "nop" => Some("jmp"),
+        "jmp" => Some("nop"),
+        x => None,
     }
 }
 
@@ -115,4 +85,29 @@ fn test_replacement_instruction(
         }
     }
     Some(accumulator)
+}
+
+fn run_instruction(instruction: &str, argument: &str) -> Option<InstructionResult> {
+    match instruction {
+        "jmp" => jmp(argument),
+        "acc" => acc(argument),
+        "nop" => Some((0, 1)),
+        _ => None,
+    }
+}
+
+fn jmp(argument: &str) -> Option<InstructionResult> {
+    parse_signed_num(argument).and_then(|p| Some((0, p)))
+}
+
+fn acc(argument: &str) -> Option<InstructionResult> {
+    parse_signed_num(argument).and_then(|p| Some((p, 1)))
+}
+
+fn parse_signed_num(input: &str) -> Option<i32> {
+    input.chars().next().and_then(|sign| match sign {
+        '+' => input[1..].parse().ok(),
+        '-' => input.parse().ok(),
+        _ => None,
+    })
 }
