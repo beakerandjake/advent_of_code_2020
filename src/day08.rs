@@ -35,7 +35,7 @@ pub fn part2(input: &str) -> Result<String, Box<dyn Error>> {
             Some(x) => x,
         };
 
-        if let Some(acc) = test_replacement_instruction(name, argument, index, &instructions) {
+        if let Some(acc) = test_replacement(name, argument, index, &instructions) {
             return Ok(acc.to_string());
         }
     }
@@ -47,11 +47,11 @@ fn replace_instruction<'a>(instruction: &'a str) -> Option<&'a str> {
     match instruction {
         "nop" => Some("jmp"),
         "jmp" => Some("nop"),
-        x => None,
+        _ => None,
     }
 }
 
-fn test_replacement_instruction(
+fn test_replacement(
     replacement_instruction: &str,
     replacement_argumnet: &str,
     replacement_index: usize,
@@ -73,15 +73,12 @@ fn test_replacement_instruction(
             (&instructions[index][..3], &instructions[index][4..])
         };
 
-        match run_instruction(instruction, argument) {
-            None => continue,
-            Some(result) => {
-                accumulator += result.0;
-                index = match result.1.is_positive() {
-                    true => index + result.1 as usize,
-                    false => index - result.1.abs() as usize,
-                };
-            }
+        if let Some(result) = run_instruction(instruction, argument) {
+            accumulator += result.0;
+            index = match result.1.is_positive() {
+                true => index + result.1 as usize,
+                false => index - result.1.abs() as usize,
+            };
         }
     }
     Some(accumulator)
