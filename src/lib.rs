@@ -13,10 +13,11 @@ mod day06;
 mod day07;
 mod day08;
 mod day09;
+mod day10;
 
 type DayFn = fn(&str) -> Result<String, Box<dyn Error>>;
 
-// attempts to run both parts of the day 
+// attempts to run both parts of the day
 pub fn run_day(day: u32) -> Result<(), Box<dyn Error>> {
     // load text file input for day.
     let input = read_input_file(day)?;
@@ -53,6 +54,7 @@ fn get_day(day: u32) -> Option<(DayFn, DayFn)> {
         7 => Some((day07::part1, day07::part2)),
         8 => Some((day08::part1, day08::part2)),
         9 => Some((day09::part1, day09::part2)),
+        10 => Some((day10::part1, day10::part2)),
         _ => None,
     }
 }
